@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import edu.scut.generator.R
@@ -14,7 +15,7 @@ import edu.scut.generator.databinding.MainFragmentBinding
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
 
-class MainFragment : Fragment() {
+class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdapter {
 
     companion object {
         fun newInstance() = MainFragment()
@@ -38,21 +39,26 @@ class MainFragment : Fragment() {
         viewModel.generatorItemList.observe(this) {
             recyclerView.adapter!!.notifyDataSetChanged()
         }
-        recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList)
+        recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList, this)
         Constant.defaultGeneratorList.forEach {
             it.iconId = R.drawable.ic_generator
         }
         viewModel.generatorItemList.value = Constant.defaultGeneratorList
-
-//        Thread {
-//            Thread.sleep(1000)
-//            Constant.defaultGeneratorList.forEach {
-//                it.iconId = R.drawable.ic_generator
-//            }
-//            viewModel.generatorItemList.postValue(Constant.defaultGeneratorList)
-//        }.start()
-
         return dataBinding.root
+    }
+
+    override fun onItemClick(item: GeneratorItem) {
+        if (activity != null) {
+            activity!!.supportFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.from_right_in,
+                    R.anim.from_right_out,
+                    R.anim.from_right_in,
+                    R.anim.from_right_out
+                )
+                .replace(R.id.container, DetailFragment.newInstance(item))
+                .addToBackStack(null).commit()
+        }
     }
 
 }

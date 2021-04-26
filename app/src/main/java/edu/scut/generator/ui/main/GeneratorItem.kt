@@ -16,7 +16,7 @@ data class GeneratorItem(
         fun stateToString(state: GeneratorState): String {
             return when (state) {
                 GeneratorState.Running -> "正在运行"
-                GeneratorState.Stopped -> "停止运行"
+                GeneratorState.Paused -> "暂停运行"
                 GeneratorState.Disabled -> "失去功能"
                 GeneratorState.Disconnected -> "连接断开"
                 GeneratorState.Unknown -> "未知状态"

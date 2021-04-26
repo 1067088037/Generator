@@ -18,7 +18,7 @@ object Constant {
             id = 1,
             iconId = 0,
             name = "2号发电机",
-            state = GeneratorState.Stopped,
+            state = GeneratorState.Paused,
             power = 0.0,
             temperatureDifference = 0.0,
             rev = 0
