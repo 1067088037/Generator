@@ -36,19 +36,21 @@ class MainFragment : Fragment() {
         recyclerView = dataBinding.mainRecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
         viewModel.generatorItemList.observe(this) {
-            debug("观察者")
             recyclerView.adapter!!.notifyDataSetChanged()
         }
         recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList)
+        Constant.defaultGeneratorList.forEach {
+            it.iconId = R.drawable.ic_generator
+        }
+        viewModel.generatorItemList.value = Constant.defaultGeneratorList
 
-        Thread {
-            Thread.sleep(1000)
-            debug("添加")
-            Constant.defaultGeneratorList.forEach {
-                it.iconId = R.drawable.ic_generator
-            }
-            viewModel.generatorItemList.postValue(Constant.defaultGeneratorList)
-        }.start()
+//        Thread {
+//            Thread.sleep(1000)
+//            Constant.defaultGeneratorList.forEach {
+//                it.iconId = R.drawable.ic_generator
+//            }
+//            viewModel.generatorItemList.postValue(Constant.defaultGeneratorList)
+//        }.start()
 
         return dataBinding.root
     }

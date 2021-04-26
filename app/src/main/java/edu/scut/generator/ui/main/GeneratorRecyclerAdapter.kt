@@ -1,6 +1,8 @@
 package edu.scut.generator.ui.main
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +11,7 @@ import android.widget.TextView
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import edu.scut.generator.R
+import edu.scut.generator.global.GeneratorState
 
 class GeneratorRecyclerAdapter(val dataList: MutableLiveData<ArrayList<GeneratorItem>>) :
     RecyclerView.Adapter<GeneratorRecyclerAdapter.ViewHolder>() {
@@ -34,11 +37,37 @@ class GeneratorRecyclerAdapter(val dataList: MutableLiveData<ArrayList<Generator
         val generatorItem = dataList.value!![position]
         holder.icon.setImageResource(generatorItem.iconId)
         holder.name.text = generatorItem.name
-        holder.state.text = generatorItem.state
-        holder.power.text = String.format("%.3f", generatorItem.power)
+        holder.state.text = GeneratorItem.stateToString(generatorItem.state)
+        holder.power.text = String.format("%.3f W", generatorItem.power)
         holder.temperatureDifference.text =
             String.format("%.1f ℃", generatorItem.temperatureDifference)
         holder.rev.text = "${generatorItem.rev} rpm"
+
+        holder.state.setTextColor(
+            when (generatorItem.state) {
+                GeneratorState.Running -> Color.rgb(48, 175, 56)
+                GeneratorState.Stopped -> Color.rgb(136, 136, 136)
+                GeneratorState.Disabled -> Color.rgb(233, 30, 99)
+                GeneratorState.Disconnected -> Color.rgb(232, 138, 0)
+                GeneratorState.Unknown -> Color.rgb(3, 169, 244)
+            }
+        )
+
+        holder.itemView.setOnClickListener {
+            AlertDialog.Builder(holder.itemView.context)
+                .setTitle(generatorItem.name)
+                .setMessage(
+                    "ID: ${generatorItem.id}\n" +
+                            "名称: ${generatorItem.name}\n" +
+                            "状态: ${GeneratorItem.stateToString(generatorItem.state)}\n" +
+                            "功率: ${generatorItem.power} W\n" +
+                            "温差: ${generatorItem.temperatureDifference} ℃\n" +
+                            "转速: ${generatorItem.rev} rpm\n\n" +
+                            "监测曲线 TODO" // TODO: 2021/4/26
+                )
+                .setPositiveButton("关闭", null)
+                .show()
+        }
     }
 
     override fun getItemCount(): Int {

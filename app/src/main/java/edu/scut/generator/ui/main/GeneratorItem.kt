@@ -6,7 +6,7 @@ data class GeneratorItem(
     var id: Int = -1,
     var iconId: Int = 0,
     var name: String = "Generator",
-    var state: String = "未知",
+    var state: GeneratorState = GeneratorState.Unknown,
     var power: Double = 0.0,
     var temperatureDifference: Double = 0.0,
     var rev: Int = 0
