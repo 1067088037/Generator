@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Generator</string>
+    <string name="generator_name">名称</string>
+    <string name="generator_state">状态</string>
+    <string name="generator_power">功率</string>
+    <string name="generator_temperature_difference">温差</string>
+    <string name="generator_rev">转速</string>
+    <string name="rotation_per_minute">rpm</string>
+    <string name="exit">退出</string>
 </resources>

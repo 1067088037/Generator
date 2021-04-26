@@ -7,8 +7,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import edu.scut.generator.R
 import edu.scut.generator.databinding.MainFragmentBinding
+import edu.scut.generator.global.Constant
+import edu.scut.generator.global.debug
 
 class MainFragment : Fragment() {
 
@@ -19,18 +23,34 @@ class MainFragment : Fragment() {
     private lateinit var viewModel: MainViewModel
     private lateinit var dataBinding: MainFragmentBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
-        dataBinding = DataBindingUtil.inflate(inflater, R.layout.main_fragment, container, false)
-        return dataBinding.root
-    }
+    private lateinit var recyclerView: RecyclerView
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        dataBinding = DataBindingUtil.inflate(inflater, R.layout.main_fragment, container, false)
         dataBinding.data = viewModel
         dataBinding.lifecycleOwner = this
-    }
+        recyclerView = dataBinding.mainRecyclerView
+        recyclerView.layoutManager = LinearLayoutManager(context)
+        viewModel.generatorItemList.observe(this) {
+            debug("观察者")
+            recyclerView.adapter!!.notifyDataSetChanged()
+        }
+        recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList)
 
+        Thread {
+            Thread.sleep(1000)
+            debug("添加")
+            Constant.defaultGeneratorList.forEach {
+                it.iconId = R.drawable.ic_generator
+            }
+            viewModel.generatorItemList.postValue(Constant.defaultGeneratorList)
+        }.start()
+
+        return dataBinding.root
+    }
 
 }
