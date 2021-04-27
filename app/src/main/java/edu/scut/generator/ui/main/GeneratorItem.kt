@@ -1,9 +1,10 @@
 package edu.scut.generator.ui.main
 
 import edu.scut.generator.global.GeneratorState
+import java.util.*
 
 data class GeneratorItem(
-    var id: Int = -1,
+    var id: UUID = UUID.randomUUID(),
     var iconId: Int = 0,
     var name: String = "Generator",
     var state: GeneratorState = GeneratorState.Unknown,

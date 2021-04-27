@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -34,6 +37,10 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         dataBinding = DataBindingUtil.inflate(inflater, R.layout.main_fragment, container, false)
         dataBinding.data = viewModel
         dataBinding.lifecycleOwner = this
+
+        (activity!! as AppCompatActivity).supportActionBar!!.setDisplayHomeAsUpEnabled(false)
+        (activity!! as AppCompatActivity).supportActionBar!!.title = "发电机控制器"
+
         recyclerView = dataBinding.mainRecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
         viewModel.generatorItemList.observe(this) {
@@ -44,6 +51,7 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
             it.iconId = R.drawable.ic_generator
         }
         viewModel.generatorItemList.value = Constant.defaultGeneratorList
+
         return dataBinding.root
     }
 
@@ -57,7 +65,7 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
                     R.anim.from_right_out
                 )
                 .replace(R.id.container, DetailFragment.newInstance(item))
-                .addToBackStack(null).commit()
+                .addToBackStack("MainFragment").commit()
         }
     }
 

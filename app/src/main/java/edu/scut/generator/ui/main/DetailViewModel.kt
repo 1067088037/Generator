@@ -6,6 +6,7 @@ import com.github.mikephil.charting.data.Entry
 
 class DetailViewModel : ViewModel() {
 
+    var thisGeneratorItem = MutableLiveData(GeneratorItem())
     var lineCharData = MutableLiveData<ArrayList<Entry>>(arrayListOf())
 
 }
