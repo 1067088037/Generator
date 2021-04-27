@@ -9,8 +9,8 @@ class DetailViewModel : ViewModel() {
     var thisGeneratorItem = MutableLiveData(GeneratorItem())
     var lineCharData = MutableLiveData<ArrayList<Entry>>(arrayListOf())
 
-    fun getStateString(): String = GeneratorItem.stateToString(thisGeneratorItem.value!!.state)
-
-    fun getPowerString(): String = "${String.format("%.3f", thisGeneratorItem.value!!.power)}W"
+    fun getStateText(): String = GeneratorItem.stateToString(thisGeneratorItem.value!!.state)
+    fun getStateTextColor(): Int = GeneratorItem.getStateTextColor(thisGeneratorItem.value!!.state)
+    fun getPowerText(): String = "${String.format("%.3f", thisGeneratorItem.value!!.power)}W"
 
 }

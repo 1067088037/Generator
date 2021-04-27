@@ -1,5 +1,6 @@
 package edu.scut.generator.ui.main
 
+import android.graphics.Color
 import edu.scut.generator.global.GeneratorState
 import java.util.*
 
@@ -21,6 +22,16 @@ data class GeneratorItem(
                 GeneratorState.Disabled -> "失去功能"
                 GeneratorState.Disconnected -> "连接断开"
                 GeneratorState.Unknown -> "未知状态"
+            }
+        }
+
+        fun getStateTextColor(state: GeneratorState): Int {
+            return when (state) {
+                GeneratorState.Running -> Color.rgb(48, 175, 56)
+                GeneratorState.Paused -> Color.rgb(136, 136, 136)
+                GeneratorState.Disabled -> Color.rgb(233, 30, 99)
+                GeneratorState.Disconnected -> Color.rgb(232, 138, 0)
+                GeneratorState.Unknown -> Color.rgb(3, 169, 244)
             }
         }
     }

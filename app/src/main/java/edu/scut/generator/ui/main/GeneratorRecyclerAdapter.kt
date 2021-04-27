@@ -51,31 +51,10 @@ class GeneratorRecyclerAdapter(
         holder.temperatureDifference.text =
             String.format("%.1f ℃", generatorItem.temperatureDifference)
         holder.rev.text = "${generatorItem.rev} rpm"
-        holder.state.setTextColor(
-            when (generatorItem.state) {
-                GeneratorState.Running -> Color.rgb(48, 175, 56)
-                GeneratorState.Paused -> Color.rgb(136, 136, 136)
-                GeneratorState.Disabled -> Color.rgb(233, 30, 99)
-                GeneratorState.Disconnected -> Color.rgb(232, 138, 0)
-                GeneratorState.Unknown -> Color.rgb(3, 169, 244)
-            }
-        )
+        holder.state.setTextColor(GeneratorItem.getStateTextColor(generatorItem.state))
 
         holder.itemView.setOnClickListener {
             mainIGeneratorRecyclerAdapter.onItemClick(generatorItem)
-//            AlertDialog.Builder(holder.itemView.context)
-//                .setTitle(generatorItem.name)
-//                .setMessage(
-//                    "ID: ${generatorItem.id}\n" +
-//                            "名称: ${generatorItem.name}\n" +
-//                            "状态: ${GeneratorItem.stateToString(generatorItem.state)}\n" +
-//                            "功率: ${generatorItem.power} W\n" +
-//                            "温差: ${generatorItem.temperatureDifference} ℃\n" +
-//                            "转速: ${generatorItem.rev} rpm\n\n" +
-//                            "监测曲线 TODO" // TODO: 2021/4/26
-//                )
-//                .setPositiveButton("关闭", null)
-//                .show()
         }
     }
 
