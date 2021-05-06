@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import edu.scut.generator.R
@@ -24,6 +25,7 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         fun newInstance() = MainFragment()
     }
 
+    private val logTag = MainFragment::class.java.name
     private lateinit var viewModel: MainViewModel
     private lateinit var dataBinding: MainFragmentBinding
 
@@ -33,7 +35,7 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        viewModel = ViewModelProvider(activity!!).get("MainViewModel", MainViewModel::class.java)
         dataBinding = DataBindingUtil.inflate(inflater, R.layout.main_fragment, container, false)
         dataBinding.data = viewModel
         dataBinding.lifecycleOwner = this
@@ -41,11 +43,14 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         (activity!! as AppCompatActivity).supportActionBar!!.setDisplayHomeAsUpEnabled(false)
         (activity!! as AppCompatActivity).supportActionBar!!.title = "发电机控制器"
 
+        viewModel.bluetoothDiscovering.observe(this, Observer {
+            dataBinding.mainDiscovering.visibility = it
+        })
         recyclerView = dataBinding.mainRecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
-        viewModel.generatorItemList.observe(this) {
+        viewModel.generatorItemList.observe(this, Observer {
             recyclerView.adapter!!.notifyDataSetChanged()
-        }
+        })
         recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList, this)
         Constant.defaultGeneratorList.forEach {
             it.iconId = R.drawable.ic_generator
@@ -68,5 +73,7 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
                 .addToBackStack("MainFragment").commit()
         }
     }
+
+    private fun debug(any: Any) = debug(logTag, any)
 
 }

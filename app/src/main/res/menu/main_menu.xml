@@ -2,6 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/manualDiscover"
+        android:title="@string/manual_discover" />
+
+    <item
         android:id="@+id/exit"
         android:title="@string/exit" />
 

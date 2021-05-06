@@ -7,7 +7,7 @@
 
         <variable
             name="data"
-            type="edu.scut.generator.ui.main.DetailViewModel" />
+            type="edu.scut.generator.ui.main.MainViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
