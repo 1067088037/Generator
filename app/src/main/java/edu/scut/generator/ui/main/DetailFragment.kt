@@ -1,6 +1,7 @@
 package edu.scut.generator.ui.main
 
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -8,8 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -50,8 +53,34 @@ class DetailFragment : Fragment() {
         viewModel.lineCharData.observe(this) {
             databinding.powerLineChart.data = LineData(LineDataSet(it, "功率"))
         }
-        viewModel.lineCharData.value =
-            arrayListOf(Entry(10f, 0f), Entry(20f, 5f), Entry(30f, 8f), Entry(40f, 12f))
+        databinding.powerLineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        databinding.powerLineChart.description.text = "发电机功率"
+        databinding.powerLineChart.axisLeft.axisMinimum = 0f
+        databinding.powerLineChart.axisLeft.axisMaximum = 30f
+        databinding.powerLineChart.axisRight.isEnabled = false
+        Thread {
+//            val stTime = SystemClock.elapsedRealtime()
+//            while (lifecycle.currentState != Lifecycle.State.DESTROYED) {
+//                val data = viewModel.lineCharData.value!!
+//                val rand = (Math.random() - 0.5).toFloat()
+//                val entry = Entry(
+//                    (SystemClock.elapsedRealtime() - stTime) / 1000f,
+//                    18f + rand * 5
+//                )
+//                data.add(entry)
+//                viewModel.thisGeneratorItem.postValue(viewModel.thisGeneratorItem.value!!.apply {
+//                    power = entry.y.toDouble()
+//                    temperatureDifference = 8.5 + rand
+//                    rev = 600 + (rand * 50).toInt()
+//                })
+//                if (data.size > 10) data.removeAt(0)
+//                viewModel.lineCharData.postValue(data)
+//                databinding.powerLineChart.notifyDataSetChanged()
+//                databinding.powerLineChart.invalidate()
+//                Thread.sleep(200)
+//            }
+//            debug("线程结束")
+        }.start()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

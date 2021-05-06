@@ -65,19 +65,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@{`功率: `+String.valueOf(data.thisGeneratorItem.power)+` W`}" />
+                android:text="@{`功率: `+ String.format(`%.3f W`, data.thisGeneratorItem.power)}" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@{`温差: `+String.valueOf(data.thisGeneratorItem.temperatureDifference)+` ℃`}" />
+                android:text="@{`温差: `+ String.format(`%.1f ℃`, data.thisGeneratorItem.temperatureDifference)}" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@{`转速: `+String.valueOf(data.thisGeneratorItem.rev)+` rpm`}" />
+                android:text="@{`转速: `+ String.valueOf(data.thisGeneratorItem.rev) + `rpm`}" />
 
         </LinearLayout>
 

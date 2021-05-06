@@ -11,6 +11,6 @@ class DetailViewModel : ViewModel() {
 
     fun getStateText(): String = GeneratorItem.stateToString(thisGeneratorItem.value!!.state)
     fun getStateTextColor(): Int = GeneratorItem.getStateTextColor(thisGeneratorItem.value!!.state)
-    fun getPowerText(): String = "${String.format("%.3f", thisGeneratorItem.value!!.power)}W"
+    fun getPowerText(): String = String.format("%.3f W", thisGeneratorItem.value!!.power)
 
 }
