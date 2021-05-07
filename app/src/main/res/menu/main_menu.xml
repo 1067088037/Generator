@@ -2,6 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/tempTest"
+        android:title="@string/temp_test" />
+
+    <item
         android:id="@+id/manualDiscover"
         android:title="@string/manual_discover" />
 

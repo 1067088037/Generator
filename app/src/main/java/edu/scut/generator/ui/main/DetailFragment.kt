@@ -28,7 +28,10 @@ class DetailFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel = ViewModelProvider(activity!!).get("MainViewModel", MainViewModel::class.java)
+        viewModel = ViewModelProvider(
+            activity!!,
+            ViewModelProvider.AndroidViewModelFactory.getInstance(activity!!.application)
+        ).get(MainViewModel::class.java)
         dataBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_detail, container, false)
         dataBinding.data = viewModel
         dataBinding.lifecycleOwner = this

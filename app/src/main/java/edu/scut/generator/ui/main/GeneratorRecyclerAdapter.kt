@@ -14,7 +14,7 @@ import edu.scut.generator.R
 import edu.scut.generator.global.GeneratorState
 
 class GeneratorRecyclerAdapter(
-    private val dataList: MutableLiveData<ArrayList<GeneratorItem>>,
+    private val dataList: MutableLiveData<List<GeneratorItem>>,
     fragment: MainFragment
 ) :
     RecyclerView.Adapter<GeneratorRecyclerAdapter.ViewHolder>() {
@@ -47,10 +47,9 @@ class GeneratorRecyclerAdapter(
         holder.icon.setImageResource(generatorItem.iconId)
         holder.name.text = generatorItem.name
         holder.state.text = GeneratorItem.stateToString(generatorItem.state)
-        holder.power.text = String.format("%.3f W", generatorItem.power)
-        holder.temperatureDifference.text =
-            String.format("%.1f ℃", generatorItem.temperatureDifference)
-        holder.rev.text = "${generatorItem.rev} rpm"
+        holder.power.text = "%.2f W".format(generatorItem.power)
+        holder.temperatureDifference.text = "%.1f ℃".format(generatorItem.temperatureDifference)
+        holder.rev.text = "%.1f rpm".format(generatorItem.rev)
         holder.state.setTextColor(GeneratorItem.getStateTextColor(generatorItem.state))
 
         holder.itemView.setOnClickListener {
