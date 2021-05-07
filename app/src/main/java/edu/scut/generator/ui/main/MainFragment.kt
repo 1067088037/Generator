@@ -21,6 +21,7 @@ import edu.scut.generator.R
 import edu.scut.generator.databinding.MainFragmentBinding
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
+import java.util.*
 
 class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdapter, EventObserver {
 
@@ -34,7 +35,7 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
 
     private lateinit var recyclerView: RecyclerView
 
-    private val readByteArray = ByteArray(0)
+    private val readBytes: Queue<Byte> = LinkedList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -68,10 +69,28 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
     @Observe
     override fun onRead(device: BluetoothDevice, value: ByteArray) {
         super.onRead(device, value)
-        debug("onRead, device = $device, value = $value")
-//        if (device == viewModel.bluetoothConnection.value?.device) {
-//
-//        }
+        debug(
+            "onRead, device = ${device.name}, " +
+                    "value = ${value.toTypedArray().contentDeepToString()}"
+        )
+        if (device == viewModel.bluetoothConnection.value?.device) {
+            value.forEach {
+                readBytes.offer(it) //将收到的信息插入队列
+            }
+        }
+        while (readBytes.isNotEmpty() && readBytes.peek() != Constant.MessageStartCode) {
+            readBytes.poll() //保持队列的顶端是起始符
+        }
+        if (readBytes.contains(Constant.MessageStopCode)) {
+            var input = ""
+            while (true) {
+                val poll = readBytes.poll()!! //载入从起始符到终止符之间的内容
+                input += poll.toChar()
+                if (poll == Constant.MessageStopCode) break
+            }
+            val generators = GeneratorItem.decodeGeneratorArray(input) //解码成发电机信息
+            debug("收到发电机信息 = ${generators.contentDeepToString()}")
+        }
     }
 
     override fun onItemClick(item: GeneratorItem) {

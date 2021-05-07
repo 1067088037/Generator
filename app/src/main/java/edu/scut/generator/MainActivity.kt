@@ -20,31 +20,33 @@ import edu.scut.generator.global.Constant
 import edu.scut.generator.ui.main.MainFragment
 import edu.scut.generator.ui.main.MainViewModel
 import java.util.*
+import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity(), EventObserver {
 
     private lateinit var viewModel: MainViewModel
-    private lateinit var btManager: BTManager
+    private var btManager: BTManager? = null
     private val tag = MainActivity::class.java.name
 
     private val discoveryListener = object : DiscoveryListener {
-        private val deviceList = mutableListOf<BluetoothDevice>()
+        private val deviceList = arrayListOf<BluetoothDevice>()
 
         override fun onDiscoveryStart() {
-            debug("搜索开始")
+            debug("搜索开始 监听器 = ${this.hashCode()}")
             deviceList.clear()
             viewModel.bluetoothDiscovering.postValue(View.VISIBLE)
         }
 
         override fun onDiscoveryStop() {
+            debug("搜索结束 共找到${deviceList.size}个设备")
             if (deviceList.isNotEmpty()) {
-                debug("搜索结束 共找到${deviceList.size}个设备")
                 viewModel.bluetoothDiscovering.postValue(View.GONE)
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle("选择要连接的设备")
                     .setItems(deviceList.map { it.name }.toTypedArray()) { dialog, which ->
                         val connection =
-                            btManager.createConnection(deviceList[which], this@MainActivity)
+                            btManager?.createConnection(deviceList[which], this@MainActivity)
                         viewModel.bluetoothConnection.value = connection
                         connection?.connect(UUID.randomUUID(), object : ConnectCallback {
                             override fun onSuccess() {
@@ -55,11 +57,9 @@ class MainActivity : AppCompatActivity(), EventObserver {
                                 Log.e(tag, "与 ${connection.device.name} 连接失败 错误信息 = $errMsg")
                             }
                         })
-                        deviceList.clear()
                         dialog.dismiss()
                     }
                     .setNeutralButton("取消") { dialog, _ ->
-                        deviceList.clear()
                         dialog.dismiss()
                     }
                     .setCancelable(false)
@@ -99,29 +99,29 @@ class MainActivity : AppCompatActivity(), EventObserver {
     override fun onDestroy() {
         super.onDestroy()
         debug("销毁蓝牙")
-        btManager.destroy()
+        btManager?.destroy()
     }
 
     private fun initBluetooth() {
         debug("初始化蓝牙")
-        if (this::btManager.isInitialized.not()) {
+        if (btManager == null) {
             debug("实例化和初始化蓝牙")
             btManager = BTManager.getInstance().apply { initialize(application) }
             BTManager.isDebugMode = true
-            btManager.addDiscoveryListener(discoveryListener)
+            btManager!!.addDiscoveryListener(discoveryListener)
         }
         startDiscovery()
     }
 
     private fun startDiscovery() {
         debug("开始搜索 startDiscovery()")
-        if (btManager.bluetoothAdapter!!.isEnabled.not()) {
+        if (btManager?.bluetoothAdapter!!.isEnabled.not()) {
             startActivityForResult(
                 Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
                 Constant.startBluetoothCode
             )
         } else {
-            btManager.startDiscovery()
+            btManager?.startDiscovery()
         }
     }
 
@@ -133,7 +133,9 @@ class MainActivity : AppCompatActivity(), EventObserver {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.manualDiscover -> startDiscovery()
-            R.id.exit -> finish()
+            R.id.exit -> {
+                finish()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -149,6 +151,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        debug("onActivityResult requestCode = $requestCode, resultCode = $resultCode")
         when (requestCode) {
             Constant.startBluetoothCode -> startDiscovery()
         }
