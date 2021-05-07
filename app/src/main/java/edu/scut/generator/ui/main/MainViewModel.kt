@@ -3,9 +3,12 @@ package edu.scut.generator.ui.main
 import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import cn.wandersnail.bluetooth.Connection
 import com.github.mikephil.charting.data.Entry
 
 class MainViewModel : ViewModel() {
+
+    val bluetoothConnection = MutableLiveData<Connection>(null)
 
     val bluetoothDiscovering = MutableLiveData(View.INVISIBLE)
     val generatorItemList = MutableLiveData<ArrayList<GeneratorItem>>(arrayListOf())

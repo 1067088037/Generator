@@ -1,5 +1,6 @@
 package edu.scut.generator.ui.main
 
+import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -14,12 +15,14 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import cn.wandersnail.bluetooth.EventObserver
+import cn.wandersnail.commons.observer.Observe
 import edu.scut.generator.R
 import edu.scut.generator.databinding.MainFragmentBinding
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
 
-class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdapter {
+class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdapter, EventObserver {
 
     companion object {
         fun newInstance() = MainFragment()
@@ -30,6 +33,8 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
     private lateinit var dataBinding: MainFragmentBinding
 
     private lateinit var recyclerView: RecyclerView
+
+    private val readByteArray = ByteArray(0)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -58,6 +63,15 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         viewModel.generatorItemList.value = Constant.defaultGeneratorList
 
         return dataBinding.root
+    }
+
+    @Observe
+    override fun onRead(device: BluetoothDevice, value: ByteArray) {
+        super.onRead(device, value)
+        debug("onRead, device = $device, value = $value")
+//        if (device == viewModel.bluetoothConnection.value?.device) {
+//
+//        }
     }
 
     override fun onItemClick(item: GeneratorItem) {

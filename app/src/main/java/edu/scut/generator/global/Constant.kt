@@ -4,6 +4,7 @@ import edu.scut.generator.ui.main.GeneratorItem
 
 object Constant {
     const val requestPermissionCode = 0x0
+    const val startBluetoothCode = 0x1
 
     //需要申请的权限
     val needPermissions = arrayOf(
