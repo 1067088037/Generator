@@ -3,6 +3,7 @@ package edu.scut.generator.ui.main
 import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -32,11 +33,12 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         fun newInstance() = MainFragment()
     }
 
-    private val logTag = MainFragment::class.java.name
+    private val logTag = "MainFragment"
     private lateinit var viewModel: MainViewModel
     private lateinit var dataBinding: MainFragmentBinding
 
     private lateinit var recyclerView: RecyclerView
+    private var lastNotifyDataTime = SystemClock.elapsedRealtime()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,13 +61,16 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         recyclerView = dataBinding.mainRecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
         viewModel.generatorItemList.observe(this, Observer {
-            recyclerView.adapter!!.notifyDataSetChanged()
+            if (SystemClock.elapsedRealtime() - lastNotifyDataTime >= 500) {
+                recyclerView.adapter!!.notifyDataSetChanged()
+                lastNotifyDataTime = SystemClock.elapsedRealtime()
+            }
         })
         recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList, this)
-        Constant.defaultGeneratorList.forEach {
-            it.iconId = R.drawable.ic_generator
-        }
-        viewModel.generatorItemList.value = Constant.defaultGeneratorList
+//        Constant.defaultGeneratorList.forEach {
+//            it.iconId = R.drawable.ic_generator
+//        }
+//        viewModel.generatorItemList.value = Constant.defaultGeneratorList.toMutableList()
 
         return dataBinding.root
     }

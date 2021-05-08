@@ -15,6 +15,7 @@ import cn.wandersnail.bluetooth.Connection
 import cn.wandersnail.bluetooth.DiscoveryListener
 import com.github.mikephil.charting.data.Entry
 import edu.scut.generator.MainActivity
+import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
 import java.util.*
 import kotlin.collections.ArrayList
@@ -25,10 +26,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val lastReadBluetoothTime = MutableLiveData(SystemClock.elapsedRealtime())
 
     val bluetoothDiscovering = MutableLiveData(View.INVISIBLE)
-    val generatorItemList = MutableLiveData<List<GeneratorItem>>(arrayListOf())
+    val generatorItemList = MutableLiveData<MutableList<GeneratorItem>>(mutableListOf())
 
-    var thisGeneratorItem = MutableLiveData(GeneratorItem())
-    var lineCharData = MutableLiveData<ArrayList<Entry>>(arrayListOf())
+    val thisGeneratorItem = MutableLiveData(GeneratorItem())
+    val entryDetailTime = MutableLiveData(SystemClock.elapsedRealtime())
+    val powerLineChatData =
+        MutableLiveData<ArrayList<Entry>>(ArrayList(Constant.MaxPointNumberMeanwhile))
+    val differTLineChatData =
+        MutableLiveData<ArrayList<Entry>>(ArrayList(Constant.MaxPointNumberMeanwhile))
+    val revLineChatData =
+        MutableLiveData<ArrayList<Entry>>(ArrayList(Constant.MaxPointNumberMeanwhile))
+
     fun getStateText(): String = GeneratorItem.stateToString(thisGeneratorItem.value!!.state)
     fun getStateTextColor(): Int = GeneratorItem.getStateTextColor(thisGeneratorItem.value!!.state)
 

@@ -65,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@{`功率: `+ String.format(`%.3f W`, data.thisGeneratorItem.power)}" />
+                android:text="@{`功率: `+ String.format(`%.2f W`, data.thisGeneratorItem.power)}" />
 
             <TextView
                 android:layout_width="match_parent"

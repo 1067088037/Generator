@@ -1,12 +1,13 @@
 package edu.scut.generator.ui.main
 
 import android.graphics.Color
+import edu.scut.generator.R
 import edu.scut.generator.global.GeneratorState
 import java.util.*
 
 data class GeneratorItem(
     var id: UUID = UUID.randomUUID(),
-    var iconId: Int = 0,
+    var iconId: Int = R.drawable.ic_generator,
     var name: String = "Generator",
     var state: GeneratorState = GeneratorState.Unknown,
     var power: Double = 0.0,
@@ -80,6 +81,7 @@ data class GeneratorItem(
             val rev = content.substringBefore(',')
             return GeneratorItem(
                 id = UUID.fromString(uuid),
+                state = GeneratorState.Running,
                 power = power.toDouble(),
                 temperatureDifference = differT.toDouble(),
                 rev = rev.toDouble()

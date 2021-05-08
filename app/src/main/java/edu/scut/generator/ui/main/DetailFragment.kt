@@ -1,12 +1,14 @@
 package edu.scut.generator.ui.main
 
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -15,10 +17,12 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import edu.scut.generator.R
 import edu.scut.generator.databinding.FragmentDetailBinding
+import edu.scut.generator.global.Constant
+import edu.scut.generator.global.debug
 
 class DetailFragment : Fragment() {
 
-    private val logTag = DetailFragment::class.java.name
+    private val logTag = "DetailFragment"
     private lateinit var viewModel: MainViewModel
     private lateinit var dataBinding: FragmentDetailBinding
 
@@ -40,24 +44,87 @@ class DetailFragment : Fragment() {
         (activity!! as AppCompatActivity).supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         (activity!! as AppCompatActivity).supportActionBar!!.title = "${mItem.name}详情"
 
-        viewModel.thisGeneratorItem.observe(this, Observer {
-            dataBinding.generatorIcon.setImageResource(it.iconId)
+        viewModel.thisGeneratorItem.observe(this, Observer { generatorItem ->
+            if (generatorItem != null) dataBinding.generatorIcon.setImageResource(generatorItem.iconId)
         })
         viewModel.thisGeneratorItem.value = mItem
         initLineChart()
+        viewModel.entryDetailTime.value = SystemClock.elapsedRealtime()
 
         return dataBinding.root
     }
 
     private fun initLineChart() {
-        viewModel.lineCharData.observe(this, Observer {
-            dataBinding.powerLineChart.data = LineData(LineDataSet(it, "功率"))
+        val powerLineChart = dataBinding.powerLineChart.apply {
+            xAxis.position = XAxis.XAxisPosition.BOTTOM
+            axisLeft.axisMinimum = 0f
+            axisRight.isEnabled = false
+            description.text = "时间 / s"
+        }
+        viewModel.powerLineChatData.value!!.clear()
+        viewModel.powerLineChatData.value = ArrayList(Constant.MaxPointNumberMeanwhile)
+        viewModel.powerLineChatData.observe(this, Observer { arrayList ->
+            val lineDataSet = LineDataSet(arrayList, "功率 / W")
+            lineDataSet.setDrawFilled(true)
+            lineDataSet.fillDrawable =
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.fill_power_chart,
+                    activity!!.theme
+                )
+            val lineData = LineData(lineDataSet)
+            powerLineChart.apply {
+                data = lineData
+                notifyDataSetChanged()
+                invalidate()
+            }
         })
-        dataBinding.powerLineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        dataBinding.powerLineChart.description.text = "发电机功率"
-        dataBinding.powerLineChart.axisLeft.axisMinimum = 0f
-        dataBinding.powerLineChart.axisLeft.axisMaximum = 30f
-        dataBinding.powerLineChart.axisRight.isEnabled = false
+
+        val differTLineChart = dataBinding.differTLineChart.apply {
+            xAxis.position = XAxis.XAxisPosition.BOTTOM
+            axisLeft.axisMinimum = 0f
+            axisRight.isEnabled = false
+            description.text = "时间 / s"
+        }
+        viewModel.differTLineChatData.value!!.clear()
+        viewModel.differTLineChatData.value = ArrayList(Constant.MaxPointNumberMeanwhile)
+        viewModel.differTLineChatData.observe(this, Observer { arrayList ->
+            val lineDataSet = LineDataSet(arrayList, "温度差 / ℃")
+            lineDataSet.setDrawFilled(true)
+            lineDataSet.fillDrawable =
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.fill_differt_chart,
+                    activity!!.theme
+                )
+            val lineData = LineData(lineDataSet)
+            differTLineChart.apply {
+                data = lineData
+                notifyDataSetChanged()
+                invalidate()
+            }
+        })
+
+        val revLineChart = dataBinding.revLineChart.apply {
+            xAxis.position = XAxis.XAxisPosition.BOTTOM
+            axisLeft.axisMinimum = 0f
+            axisRight.isEnabled = false
+            description.text = "时间 / s"
+        }
+        viewModel.revLineChatData.value!!.clear()
+        viewModel.revLineChatData.value = ArrayList(Constant.MaxPointNumberMeanwhile)
+        viewModel.revLineChatData.observe(this, Observer { arrayList ->
+            val lineDataSet = LineDataSet(arrayList, "转速 / rpm")
+            lineDataSet.setDrawFilled(true)
+            lineDataSet.fillDrawable =
+                ResourcesCompat.getDrawable(resources, R.drawable.fill_rev_chart, activity!!.theme)
+            val lineData = LineData(lineDataSet)
+            revLineChart.apply {
+                data = lineData
+                notifyDataSetChanged()
+                invalidate()
+            }
+        })
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

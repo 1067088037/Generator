@@ -12,9 +12,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import edu.scut.generator.R
 import edu.scut.generator.global.GeneratorState
+import edu.scut.generator.global.debug
 
 class GeneratorRecyclerAdapter(
-    private val dataList: MutableLiveData<List<GeneratorItem>>,
+    private val dataList: MutableLiveData<MutableList<GeneratorItem>>,
     fragment: MainFragment
 ) :
     RecyclerView.Adapter<GeneratorRecyclerAdapter.ViewHolder>() {
@@ -54,6 +55,7 @@ class GeneratorRecyclerAdapter(
 
         holder.itemView.setOnClickListener {
             mainIGeneratorRecyclerAdapter.onItemClick(generatorItem)
+//            debug("点击事件 ${generatorItem.toString()}")
         }
     }
 
