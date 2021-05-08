@@ -15,6 +15,8 @@ object Constant {
     const val MaxPointNumberMeanwhile = 40
     const val MaxDebugCommandLine = 10
 
+    val DefaultDevice = "HC-05"
+
     //需要申请的权限
     val NeedPermissions = arrayOf(
         "android.permission.BLUETOOTH",

@@ -92,6 +92,8 @@ class MainActivity : AppCompatActivity(), EventObserver {
 //                debug(powerData.toTypedArray().contentDeepToString())
             }
         }
+
+        viewModel.commandTextVisibility.value = View.VISIBLE
     }
 
     override fun onResume() {
@@ -113,11 +115,11 @@ class MainActivity : AppCompatActivity(), EventObserver {
         super.onRead(device, value)
         debug(
             "onRead, device = ${device.name}, " +
-                    "value = ${value.toTypedArray().contentDeepToString()}"
+                    "value = ${value.toString(Charset.defaultCharset())}"
         )
-        if (device == viewModel.bluetoothConnection.value?.device) {
-            processDataFromBLT(value)
-        }
+//        if (device == viewModel.bluetoothConnection.value?.device) {
+        processDataFromBLT(value)
+//        }
     }
 
     private fun processDataFromBLT(byteArray: ByteArray) {
@@ -140,7 +142,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
                     val generators = GeneratorItem.decodeGeneratorArray(input) //解码成发电机信息
                     viewModel.generatorItemList.postValue(generators.toMutableList())
                     viewModel.lastReadBluetoothTime.postValue(SystemClock.elapsedRealtime())
-//                    debug("收到发电机信息 = ${generators.contentDeepToString()}")
+                    debug("收到发电机信息 = ${generators.contentDeepToString()}")
                 }
             }
         }
@@ -155,7 +157,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
         if (viewModel.discoveryListener.value == null) {
             debug("初始化蓝牙")
             btManager = BTManager.getInstance().apply { initialize(application) }
-            BTManager.isDebugMode = true
+            BTManager.isDebugMode = false
             viewModel.discoveryListener.value = object : DiscoveryListener {
                 private val deviceList = arrayListOf<BluetoothDevice>()
 
@@ -197,8 +199,11 @@ class MainActivity : AppCompatActivity(), EventObserver {
 
                 override fun onDeviceFound(device: BluetoothDevice, rssi: Int) {
                     debug("找到设备 name = ${device.name}, rssi = $rssi")
-                    if (device.name != null && deviceList.contains(device).not())
+                    if (device.name != null && deviceList.contains(device).not()) {
                         deviceList.add(device)
+                        if (device.name == Constant.DefaultDevice)
+                            btManager.stopDiscovery()
+                    }
                 }
 
                 override fun onDiscoveryError(errorCode: Int, errorMsg: String) {
