@@ -13,6 +13,7 @@ object Constant {
     const val ObjectStopCode = '}'.toByte()
 
     const val MaxPointNumberMeanwhile = 40
+    const val MaxDebugCommandLine = 10
 
     //需要申请的权限
     val NeedPermissions = arrayOf(

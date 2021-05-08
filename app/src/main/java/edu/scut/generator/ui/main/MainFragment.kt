@@ -26,6 +26,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.math.log
 
 class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdapter {
 
@@ -89,6 +90,16 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         }
     }
 
-    private fun debug(any: Any) = debug(logTag, any)
-
+    private fun debug(any: Any) {
+        edu.scut.generator.global.debug(logTag, any)
+        var command = viewModel.commandText.value!!
+        command += any.toString() + '\n'
+        while (command.run {
+                var count = 0
+                toCharArray().forEach { if (it == '\n') count++ }
+                count
+            } > Constant.MaxDebugCommandLine)
+            command = command.substringAfter('\n')
+        viewModel.commandText.postValue(command)
+    }
 }

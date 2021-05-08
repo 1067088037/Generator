@@ -146,16 +146,21 @@ class MainActivity : AppCompatActivity(), EventObserver {
         }
     }
 
+    override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
+        super.onConnectionStateChanged(device, state)
+        debug("${device.name}连接状态改变 状态 = $state")
+    }
+
     private fun initBluetooth() {
-        debug("初始化蓝牙")
         if (viewModel.discoveryListener.value == null) {
+            debug("初始化蓝牙")
             btManager = BTManager.getInstance().apply { initialize(application) }
             BTManager.isDebugMode = true
             viewModel.discoveryListener.value = object : DiscoveryListener {
                 private val deviceList = arrayListOf<BluetoothDevice>()
 
                 override fun onDiscoveryStart() {
-                    debug("搜索开始 监听器 = ${this.hashCode()}")
+                    debug("搜索开始")
                     deviceList.clear()
                     viewModel.bluetoothDiscovering.postValue(View.VISIBLE)
                 }
@@ -169,18 +174,15 @@ class MainActivity : AppCompatActivity(), EventObserver {
                             .setItems(deviceList.map { it.name }
                                 .toTypedArray()) { dialog, which ->
                                 val connection =
-                                    BTManager.getInstance().createConnection(deviceList[which])
+                                    btManager.createConnection(deviceList[which], this@MainActivity)
                                 viewModel.bluetoothConnection.value = connection!!
-                                connection.connect(UUID.randomUUID(), object : ConnectCallback {
+                                connection.connect(null, object : ConnectCallback {
                                     override fun onSuccess() {
                                         debug("与 ${connection.device.name} 连接成功")
                                     }
 
                                     override fun onFail(errMsg: String, e: Throwable?) {
-                                        Log.e(
-                                            tag,
-                                            "与 ${connection.device.name} 连接失败 错误信息 = $errMsg"
-                                        )
+                                        debug("与 ${connection.device.name} 连接失败 错误信息 = $errMsg")
                                     }
                                 })
                                 dialog.dismiss()
@@ -194,13 +196,13 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 }
 
                 override fun onDeviceFound(device: BluetoothDevice, rssi: Int) {
-                    debug("找到设备 device.name = ${device.name}, rssi = $rssi")
+                    debug("找到设备 name = ${device.name}, rssi = $rssi")
                     if (device.name != null && deviceList.contains(device).not())
                         deviceList.add(device)
                 }
 
                 override fun onDiscoveryError(errorCode: Int, errorMsg: String) {
-                    Log.e(tag, "搜索错误 错误代码 = $errorCode, 错误信息 = $errorMsg")
+                    debug("搜索错误 错误代码 = $errorCode, 错误信息 = $errorMsg")
                     viewModel.bluetoothDiscovering.postValue(View.INVISIBLE)
                 }
             }
@@ -229,6 +231,9 @@ class MainActivity : AppCompatActivity(), EventObserver {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.tempTest -> {
+            }
+            R.id.debugMode -> {
+                viewModel.commandTextVisibility.value = View.VISIBLE
             }
             R.id.simulationData -> {
                 GlobalScope.launch {
@@ -319,5 +324,16 @@ class MainActivity : AppCompatActivity(), EventObserver {
         return true
     }
 
-    private fun debug(any: Any) = edu.scut.generator.global.debug(tag, any)
+    private fun debug(any: Any) {
+        edu.scut.generator.global.debug(tag, any)
+        var command = viewModel.commandText.value!!
+        command += any.toString() + '\n'
+        while (command.run {
+                var count = 0
+                toCharArray().forEach { if (it == '\n') count++ }
+                count
+            } > Constant.MaxDebugCommandLine)
+            command = command.substringAfter('\n')
+        viewModel.commandText.postValue(command)
+    }
 }

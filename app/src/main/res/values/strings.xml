@@ -16,4 +16,5 @@
     <string name="temperatureDifference">温度差</string>
     <string name="rev">转速</string>
     <string name="simulation_data">模拟数据</string>
+    <string name="debug_mode">调试模式</string>
 </resources>

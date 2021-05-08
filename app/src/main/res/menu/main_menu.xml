@@ -6,6 +6,10 @@
         android:title="@string/temp_test" />
 
     <item
+        android:id="@+id/debugMode"
+        android:title="@string/debug_mode" />
+
+    <item
         android:id="@+id/simulationData"
         android:title="@string/simulation_data" />
 
