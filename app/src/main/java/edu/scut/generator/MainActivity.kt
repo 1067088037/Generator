@@ -53,8 +53,8 @@ class MainActivity : AppCompatActivity(), EventObserver {
         refreshGenerators = GlobalScope.launch {
             while (isActive) {
                 delay(10L)
-                if (SystemClock.elapsedRealtime() - viewModel.lastReadBluetoothTime.value!! >= 200L) {
-//                    debug("断开连接")
+                if (SystemClock.elapsedRealtime() - viewModel.lastReadBluetoothTime.value!! >= 250L) {
+//                    debug("数据超时")
                 } else {
                     val list = viewModel.generatorItemList.value!!
                     viewModel.generatorItemList.postValue(list)
@@ -182,29 +182,38 @@ class MainActivity : AppCompatActivity(), EventObserver {
                     log("搜索结束 共找到${deviceList.size}个设备")
                     if (deviceList.isNotEmpty()) {
                         viewModel.bluetoothDiscovering.postValue(View.INVISIBLE)
-                        AlertDialog.Builder(this@MainActivity)
-                            .setTitle("选择要连接的设备")
-                            .setItems(deviceList.map { it.name }
-                                .toTypedArray()) { dialog, which ->
-                                val connection =
-                                    btManager.createConnection(deviceList[which], this@MainActivity)
-                                viewModel.bluetoothConnection.value = connection!!
-                                connection.connect(null, object : ConnectCallback {
-                                    override fun onSuccess() {
-                                        log("与 ${connection.device.name} 连接成功")
-                                    }
+                        val findTargetDevice =
+                            deviceList.filter { it.name == Constant.DefaultDevice }
 
-                                    override fun onFail(errMsg: String, e: Throwable?) {
-                                        log("与 ${connection.device.name} 连接失败 错误信息 = $errMsg")
-                                    }
-                                })
-                                dialog.dismiss()
-                            }
-                            .setNeutralButton("取消") { dialog, _ ->
-                                dialog.dismiss()
-                            }
-                            .setCancelable(false)
-                            .show()
+                        fun connectDevice(device: BluetoothDevice) {
+                            val connection = btManager.createConnection(device, this@MainActivity)
+                            viewModel.bluetoothConnection.value = connection!!
+                            connection.connect(null, object : ConnectCallback {
+                                override fun onSuccess() {
+                                    log("与 ${connection.device.name} 连接成功")
+                                }
+
+                                override fun onFail(errMsg: String, e: Throwable?) {
+                                    log("与 ${connection.device.name} 连接失败 错误信息 = $errMsg")
+                                }
+                            })
+                        }
+                        if (findTargetDevice.isNotEmpty()) { //找到目标设备 直接连接
+                            connectDevice(findTargetDevice[0])
+                        } else {
+                            AlertDialog.Builder(this@MainActivity)
+                                .setTitle("选择要连接的设备")
+                                .setItems(deviceList.map { it.name }
+                                    .toTypedArray()) { dialog, which ->
+                                    connectDevice(deviceList[which])
+                                    dialog.dismiss()
+                                }
+                                .setNegativeButton("取消") { dialog, _ ->
+                                    dialog.dismiss()
+                                }
+                                .setCancelable(false)
+                                .show()
+                        }
                     }
                 }
 
@@ -262,15 +271,23 @@ class MainActivity : AppCompatActivity(), EventObserver {
                                 temperatureDifference = 5.0 + 3 * random,
                                 rev = 450.0 + 300 * random
                             )
-                        var message = GeneratorItem.encodeGeneratorArray(arrayOf(generatorItem))
-                        message = message.replace(".", " ??? ")
-                        log(message)
+                        val message = GeneratorItem.encodeGeneratorArray(arrayOf(generatorItem))
                         processDataFromBLT(message.toByteArray(Charset.defaultCharset()))
-                        delay(200L)
+                        delay(100L)
                     }
                 }
             }
             R.id.manualDiscover -> startDiscovery()
+            R.id.about -> {
+                AlertDialog.Builder(this)
+                    .setTitle("关于")
+                    .setMessage(
+                        "版本代号 ${BuildConfig.VERSION_CODE}\n" +
+                                "版本名称 ${BuildConfig.VERSION_NAME}"
+                    )
+                    .setPositiveButton("关闭", null)
+                    .show()
+            }
             R.id.exit -> {
                 finish()
             }
@@ -293,16 +310,6 @@ class MainActivity : AppCompatActivity(), EventObserver {
         when (requestCode) {
             Constant.startBluetoothCode -> startDiscovery()
         }
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-//        AlertDialog.Builder(this)
-//            .setTitle("退出")
-//            .setMessage("您执行了返回操作，是否要退出程序？")
-//            .setPositiveButton("是") { _, _ -> finish() }
-//            .setNegativeButton("否", null)
-//            .show()
     }
 
     /**

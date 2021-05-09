@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Generator</string>
+    <string name="app_name">发电机</string>
     <string name="generator_name">名称</string>
     <string name="generator_state">状态</string>
     <string name="generator_power">功率</string>
@@ -17,4 +17,5 @@
     <string name="rev">转速</string>
     <string name="simulation_data">模拟数据</string>
     <string name="debug_mode">调试模式</string>
+    <string name="about">关于</string>
 </resources>

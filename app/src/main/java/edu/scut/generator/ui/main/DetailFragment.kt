@@ -41,14 +41,14 @@ class DetailFragment : Fragment() {
         dataBinding.data = viewModel
         dataBinding.lifecycleOwner = this
 
+        if (this::mItem.isInitialized) viewModel.thisGeneratorItem.value = mItem
         setHasOptionsMenu(true)
         (activity!! as AppCompatActivity).supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        (activity!! as AppCompatActivity).supportActionBar!!.title = "${mItem.name}详情"
+        (activity!! as AppCompatActivity).supportActionBar!!.title = "${viewModel.thisGeneratorItem.value?.name}详情"
 
         viewModel.thisGeneratorItem.observe(this, Observer { generatorItem ->
             if (generatorItem != null) dataBinding.generatorIcon.setImageResource(generatorItem.iconId)
         })
-        viewModel.thisGeneratorItem.value = mItem
         initLineChart()
         viewModel.entryDetailTime.value = SystemClock.elapsedRealtime()
 
