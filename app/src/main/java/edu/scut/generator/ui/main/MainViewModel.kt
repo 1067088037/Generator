@@ -25,6 +25,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val bluetoothConnection = MutableLiveData<Connection>(null)
     val lastReadBluetoothTime = MutableLiveData(SystemClock.elapsedRealtime())
 
+    val bluetoothState = MutableLiveData("蓝牙没有连接")
     val bluetoothDiscovering = MutableLiveData(View.INVISIBLE)
     val generatorItemList = MutableLiveData<MutableList<GeneratorItem>>(mutableListOf())
     val commandText = MutableLiveData("Command >\n")

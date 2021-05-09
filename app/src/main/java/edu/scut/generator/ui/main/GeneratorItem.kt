@@ -2,6 +2,7 @@ package edu.scut.generator.ui.main
 
 import android.graphics.Color
 import edu.scut.generator.R
+import edu.scut.generator.global.Constant
 import edu.scut.generator.global.GeneratorState
 import java.util.*
 
@@ -40,9 +41,9 @@ data class GeneratorItem(
          * 编码发电机数组
          */
         fun encodeGeneratorArray(generators: Array<GeneratorItem>): String {
-            var res = "["
+            var res = Constant.MessageStartCode.toChar().toString()
             generators.forEach { res += encodeGenerator(it) }
-            return "$res]"
+            return "${res}${Constant.MessageStopCode.toChar()}"
         }
 
         /**
@@ -50,10 +51,11 @@ data class GeneratorItem(
          */
         fun decodeGeneratorArray(string: String): Array<GeneratorItem> {
             val res = arrayListOf<GeneratorItem>()
-            var content = string.substringAfter('[').substringBefore(']')
+            var content = string.substringAfter(Constant.MessageStartCode.toChar())
+                .substringBefore(Constant.MessageStopCode.toChar())
             while (content.isNotEmpty()) {
-                res.add(decodeGenerator(content.substringBefore('}') + '}'))
-                content = content.substringAfter('}')
+                res.add(decodeGenerator(content.substringBefore(Constant.ObjectStopCode.toChar()) + Constant.ObjectStopCode.toChar()))
+                content = content.substringAfter(Constant.ObjectStopCode.toChar())
             }
             return res.toTypedArray()
         }
@@ -62,16 +64,19 @@ data class GeneratorItem(
          * 以字符串的形式编码发电机
          */
         private fun encodeGenerator(generatorItem: GeneratorItem): String {
-            return "{${generatorItem.id},${"%.2f".format(generatorItem.power)}," +
+            return "${Constant.ObjectStartCode.toChar()}${generatorItem.id}," +
+                    "${"%.2f".format(generatorItem.power)}," +
                     "${"%.2f".format(generatorItem.temperatureDifference)}," +
-                    "${"%.2f".format(generatorItem.rev)}}"
+                    "${"%.2f".format(generatorItem.rev)}${Constant.ObjectStopCode.toChar()}"
         }
 
         /**
          * 将字符串编码的发电机信息解码
          */
         private fun decodeGenerator(string: String): GeneratorItem {
-            var content = string.substringAfter('{').substringBefore('}')
+            var content =
+                string.substringAfter(Constant.ObjectStartCode.toChar())
+                    .substringBefore(Constant.ObjectStopCode.toChar())
             val uuid = content.substringBefore(',')
             content = content.substringAfter(',')
             val power = content.substringBefore(',')
@@ -82,9 +87,9 @@ data class GeneratorItem(
             return GeneratorItem(
                 id = UUID.fromString(uuid),
                 state = GeneratorState.Running,
-                power = power.toDouble(),
-                temperatureDifference = differT.toDouble(),
-                rev = rev.toDouble()
+                power = power.toDoubleOrNull() ?: Double.NaN,
+                temperatureDifference = differT.toDoubleOrNull() ?: Double.NaN,
+                rev = rev.toDoubleOrNull() ?: Double.NaN
             )
         }
     }

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -17,6 +16,8 @@ import cn.wandersnail.bluetooth.*
 import cn.wandersnail.commons.observer.Observe
 import com.github.mikephil.charting.data.Entry
 import edu.scut.generator.global.Constant
+import edu.scut.generator.global.debug
+import edu.scut.generator.global.prepareCommand
 import edu.scut.generator.ui.main.GeneratorItem
 import edu.scut.generator.ui.main.MainFragment
 import edu.scut.generator.ui.main.MainViewModel
@@ -93,7 +94,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
             }
         }
 
-        viewModel.commandTextVisibility.value = View.VISIBLE
+//        viewModel.commandTextVisibility.value = View.VISIBLE
     }
 
     override fun onResume() {
@@ -113,13 +114,15 @@ class MainActivity : AppCompatActivity(), EventObserver {
     @Observe
     override fun onRead(device: BluetoothDevice, value: ByteArray) {
         super.onRead(device, value)
-        debug(
+        log(
             "onRead, device = ${device.name}, " +
                     "value = ${value.toString(Charset.defaultCharset())}"
         )
-//        if (device == viewModel.bluetoothConnection.value?.device) {
-        processDataFromBLT(value)
-//        }
+        if (device == viewModel.bluetoothConnection.value?.device) {
+            processDataFromBLT(value)
+        } else {
+            log("收到非目标设备的数据")
+        }
     }
 
     private fun processDataFromBLT(byteArray: ByteArray) {
@@ -138,37 +141,45 @@ class MainActivity : AppCompatActivity(), EventObserver {
             }
             GlobalScope.launch {
                 //解码成发电机信息
-                withContext(Dispatchers.Default) {
-                    val generators = GeneratorItem.decodeGeneratorArray(input) //解码成发电机信息
-                    viewModel.generatorItemList.postValue(generators.toMutableList())
-                    viewModel.lastReadBluetoothTime.postValue(SystemClock.elapsedRealtime())
-                    debug("收到发电机信息 = ${generators.contentDeepToString()}")
-                }
+                val generators = GeneratorItem.decodeGeneratorArray(input) //解码成发电机信息
+                viewModel.generatorItemList.postValue(generators.toMutableList())
+                viewModel.lastReadBluetoothTime.postValue(SystemClock.elapsedRealtime())
+                log("收到发电机信息 = ${generators.contentDeepToString()}")
             }
         }
     }
 
     override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
         super.onConnectionStateChanged(device, state)
-        debug("${device.name}连接状态改变 状态 = $state")
+        val stateText = when (state) {
+            Connection.STATE_CONNECTED -> "已连接"
+            Connection.STATE_CONNECTING -> "正在连接"
+            Connection.STATE_DISCONNECTED -> "断开连接"
+            Connection.STATE_PAIRED -> "已配对"
+            Connection.STATE_PAIRING -> "正在配对"
+            Connection.STATE_RELEASED -> "已释放"
+            else -> "未知状态"
+        }
+        log("${device.name}连接状态改变 状态 = $stateText")
+        viewModel.bluetoothState.postValue("与${device.name} $stateText")
     }
 
     private fun initBluetooth() {
         if (viewModel.discoveryListener.value == null) {
-            debug("初始化蓝牙")
+            log("初始化蓝牙")
             btManager = BTManager.getInstance().apply { initialize(application) }
             BTManager.isDebugMode = false
             viewModel.discoveryListener.value = object : DiscoveryListener {
                 private val deviceList = arrayListOf<BluetoothDevice>()
 
                 override fun onDiscoveryStart() {
-                    debug("搜索开始")
+                    log("搜索开始")
                     deviceList.clear()
                     viewModel.bluetoothDiscovering.postValue(View.VISIBLE)
                 }
 
                 override fun onDiscoveryStop() {
-                    debug("搜索结束 共找到${deviceList.size}个设备")
+                    log("搜索结束 共找到${deviceList.size}个设备")
                     if (deviceList.isNotEmpty()) {
                         viewModel.bluetoothDiscovering.postValue(View.INVISIBLE)
                         AlertDialog.Builder(this@MainActivity)
@@ -180,11 +191,11 @@ class MainActivity : AppCompatActivity(), EventObserver {
                                 viewModel.bluetoothConnection.value = connection!!
                                 connection.connect(null, object : ConnectCallback {
                                     override fun onSuccess() {
-                                        debug("与 ${connection.device.name} 连接成功")
+                                        log("与 ${connection.device.name} 连接成功")
                                     }
 
                                     override fun onFail(errMsg: String, e: Throwable?) {
-                                        debug("与 ${connection.device.name} 连接失败 错误信息 = $errMsg")
+                                        log("与 ${connection.device.name} 连接失败 错误信息 = $errMsg")
                                     }
                                 })
                                 dialog.dismiss()
@@ -198,7 +209,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 }
 
                 override fun onDeviceFound(device: BluetoothDevice, rssi: Int) {
-                    debug("找到设备 name = ${device.name}, rssi = $rssi")
+                    log("找到设备 name = ${device.name}, rssi = $rssi")
                     if (device.name != null && deviceList.contains(device).not()) {
                         deviceList.add(device)
                         if (device.name == Constant.DefaultDevice)
@@ -207,7 +218,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 }
 
                 override fun onDiscoveryError(errorCode: Int, errorMsg: String) {
-                    debug("搜索错误 错误代码 = $errorCode, 错误信息 = $errorMsg")
+                    log("搜索错误 错误代码 = $errorCode, 错误信息 = $errorMsg")
                     viewModel.bluetoothDiscovering.postValue(View.INVISIBLE)
                 }
             }
@@ -217,13 +228,13 @@ class MainActivity : AppCompatActivity(), EventObserver {
     }
 
     private fun startDiscovery() {
-        debug("开始搜索 startDiscovery()")
         if (btManager.bluetoothAdapter!!.isEnabled.not()) {
             startActivityForResult(
                 Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
                 Constant.startBluetoothCode
             )
         } else {
+            log("开始搜索 startDiscovery()")
             btManager.startDiscovery()
         }
     }
@@ -251,11 +262,10 @@ class MainActivity : AppCompatActivity(), EventObserver {
                                 temperatureDifference = 5.0 + 3 * random,
                                 rev = 450.0 + 300 * random
                             )
-                        processDataFromBLT(
-                            GeneratorItem.encodeGeneratorArray(arrayOf(generatorItem)).toByteArray(
-                                Charset.defaultCharset()
-                            )
-                        )
+                        var message = GeneratorItem.encodeGeneratorArray(arrayOf(generatorItem))
+                        message = message.replace(".", " ??? ")
+                        log(message)
+                        processDataFromBLT(message.toByteArray(Charset.defaultCharset()))
                         delay(200L)
                     }
                 }
@@ -279,7 +289,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        debug("onActivityResult requestCode = $requestCode, resultCode = $resultCode")
+        log("onActivityResult requestCode = $requestCode, resultCode = $resultCode")
         when (requestCode) {
             Constant.startBluetoothCode -> startDiscovery()
         }
@@ -299,7 +309,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
      * 申请权限
      */
     private fun requestPermissions() {
-        debug("申请权限对话框")
+        log("申请权限对话框")
         AlertDialog.Builder(this)
             .setTitle("申请权限")
             .setMessage("软件需要权限才能正常运行，请授予相应的权限")
@@ -321,24 +331,18 @@ class MainActivity : AppCompatActivity(), EventObserver {
     private fun permissionsAllGranted(): Boolean {
         for (i in Constant.NeedPermissions) {
             if (checkSelfPermission(i) == PackageManager.PERMISSION_DENIED) {
-                debug("权限授予失败")
+                log("权限授予失败")
                 return false
             }
         }
-        debug("权限全部授予成功")
+        log("权限全部授予成功")
         return true
     }
 
-    private fun debug(any: Any) {
-        edu.scut.generator.global.debug(tag, any)
+    private fun log(any: Any) {
+        debug(tag, any)
         var command = viewModel.commandText.value!!
         command += any.toString() + '\n'
-        while (command.run {
-                var count = 0
-                toCharArray().forEach { if (it == '\n') count++ }
-                count
-            } > Constant.MaxDebugCommandLine)
-            command = command.substringAfter('\n')
-        viewModel.commandText.postValue(command)
+        viewModel.commandText.postValue(prepareCommand(command))
     }
 }

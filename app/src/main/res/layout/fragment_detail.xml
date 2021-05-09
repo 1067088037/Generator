@@ -77,7 +77,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@{`转速: `+ String.valueOf(data.thisGeneratorItem.rev) + `rpm`}" />
+                android:text="@{`转速: `+ String.format(`%.1f rpm`, data.thisGeneratorItem.rev)}" />
 
         </LinearLayout>
 

@@ -19,6 +19,7 @@ import edu.scut.generator.R
 import edu.scut.generator.databinding.FragmentDetailBinding
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
+import edu.scut.generator.global.prepareCommand
 
 class DetailFragment : Fragment() {
 
@@ -134,17 +135,11 @@ class DetailFragment : Fragment() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun debug(any: Any) {
-        edu.scut.generator.global.debug(logTag, any)
+    private fun log(any: Any) {
+        debug(logTag, any)
         var command = viewModel.commandText.value!!
         command += any.toString() + '\n'
-        while (command.run {
-                var count = 0
-                toCharArray().forEach { if (it == '\n') count++ }
-                count
-            } > Constant.MaxDebugCommandLine)
-            command = command.substringAfter('\n')
-        viewModel.commandText.postValue(command)
+        viewModel.commandText.postValue(prepareCommand(command))
     }
 
     companion object {

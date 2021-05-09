@@ -22,6 +22,7 @@ import edu.scut.generator.R
 import edu.scut.generator.databinding.MainFragmentBinding
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
+import edu.scut.generator.global.prepareCommand
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -29,10 +30,6 @@ import java.util.*
 import kotlin.math.log
 
 class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdapter {
-
-    companion object {
-        fun newInstance() = MainFragment()
-    }
 
     private val logTag = "MainFragment"
     private lateinit var viewModel: MainViewModel
@@ -90,16 +87,14 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         }
     }
 
-    private fun debug(any: Any) {
-        edu.scut.generator.global.debug(logTag, any)
+    private fun log(any: Any) {
+        debug(logTag, any)
         var command = viewModel.commandText.value!!
         command += any.toString() + '\n'
-        while (command.run {
-                var count = 0
-                toCharArray().forEach { if (it == '\n') count++ }
-                count
-            } > Constant.MaxDebugCommandLine)
-            command = command.substringAfter('\n')
-        viewModel.commandText.postValue(command)
+        viewModel.commandText.postValue(prepareCommand(command))
+    }
+
+    companion object {
+        fun newInstance() = MainFragment()
     }
 }
