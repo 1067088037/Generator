@@ -50,22 +50,22 @@ class MainActivity : AppCompatActivity(), EventObserver {
         }
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        refreshGenerators = GlobalScope.launch {
+        refreshGenerators = CoroutineScope(Dispatchers.Main).launch {
             while (isActive) {
                 delay(10L)
                 if (SystemClock.elapsedRealtime() - viewModel.lastReadBluetoothTime.value!! >= 250L) {
 //                    debug("数据超时")
                 } else {
                     val list = viewModel.generatorItemList.value!!
-                    viewModel.generatorItemList.postValue(list)
+                    viewModel.generatorItemList.value = list
                     val thisGeneratorItem =
                         list.find { it.id == viewModel.thisGeneratorItem.value?.id }
-                    viewModel.thisGeneratorItem.postValue(thisGeneratorItem)
+                    viewModel.thisGeneratorItem.value = thisGeneratorItem
                 }
             }
         }
 
-        refreshLineChat = GlobalScope.launch {
+        refreshLineChat = CoroutineScope(Dispatchers.Default).launch {
             while (isActive) {
                 val powerData = viewModel.powerLineChatData.value!!
                 while (powerData.size > Constant.MaxPointNumberMeanwhile) powerData.removeAt(0)
@@ -86,9 +86,11 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 )
                 revData.add(Entry(xValue, generatorItem?.rev?.toFloat() ?: 0f))
 
-                viewModel.powerLineChatData.postValue(powerData)
-                viewModel.differTLineChatData.postValue(differTData)
-                viewModel.revLineChatData.postValue(revData)
+                withContext(Dispatchers.Main) {
+                    viewModel.powerLineChatData.value = powerData
+                    viewModel.differTLineChatData.value = differTData
+                    viewModel.revLineChatData.value = revData
+                }
                 delay(200L)
 //                debug(powerData.toTypedArray().contentDeepToString())
             }
@@ -139,11 +141,13 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 input += poll.toChar()
                 if (poll == Constant.MessageStopCode) break
             }
-            GlobalScope.launch {
+            CoroutineScope(Dispatchers.Default).launch {
                 //解码成发电机信息
                 val generators = GeneratorItem.decodeGeneratorArray(input) //解码成发电机信息
-                viewModel.generatorItemList.postValue(generators.toMutableList())
-                viewModel.lastReadBluetoothTime.postValue(SystemClock.elapsedRealtime())
+                withContext(Dispatchers.Main) {
+                    viewModel.generatorItemList.value = generators.toMutableList()
+                    viewModel.lastReadBluetoothTime.value = SystemClock.elapsedRealtime()
+                }
                 log("收到发电机信息 = ${generators.contentDeepToString()}")
             }
         }
@@ -261,7 +265,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 viewModel.commandTextVisibility.value = View.VISIBLE
             }
             R.id.simulationData -> {
-                GlobalScope.launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     while (isActive) {
                         val random = Math.random() - 0.5
                         val generatorItem =

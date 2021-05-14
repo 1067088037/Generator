@@ -23,7 +23,6 @@ import edu.scut.generator.databinding.MainFragmentBinding
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
 import edu.scut.generator.global.prepareCommand
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
