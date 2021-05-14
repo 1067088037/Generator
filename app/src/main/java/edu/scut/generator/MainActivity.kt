@@ -15,6 +15,9 @@ import androidx.lifecycle.ViewModelProvider
 import cn.wandersnail.bluetooth.*
 import cn.wandersnail.commons.observer.Observe
 import com.github.mikephil.charting.data.Entry
+import edu.scut.generator.database.DatabaseManager
+import edu.scut.generator.database.Generator
+import edu.scut.generator.database.GeneratorDataBase
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
 import edu.scut.generator.global.prepareCommand
@@ -30,6 +33,8 @@ class MainActivity : AppCompatActivity(), EventObserver {
     private lateinit var viewModel: MainViewModel
     private var btManager: BTManager = BTManager.getInstance()
     private val tag = "MainActivity"
+    private val generatorDataBase: GeneratorDataBase
+        get() = DatabaseManager.generatorDataBase
 
     private val readBytes: Queue<Byte> = LinkedList()
 
@@ -48,6 +53,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 .replace(R.id.container, MainFragment.newInstance())
                 .commitNow()
         }
+        DatabaseManager.init(applicationContext)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         refreshGenerators = CoroutineScope(Dispatchers.Main).launch {
@@ -260,6 +266,8 @@ class MainActivity : AppCompatActivity(), EventObserver {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.tempTest -> {
+//                generatorDataBase.deleteGenerator(Generator(_id = 6))
+//                generatorDataBase.addGenerator(Generator(uuid = "123456"))
             }
             R.id.debugMode -> {
                 viewModel.commandTextVisibility.value = View.VISIBLE
