@@ -18,4 +18,6 @@
     <string name="simulation_data">模拟数据</string>
     <string name="debug_mode">调试模式</string>
     <string name="about">关于</string>
+    <string name="database_operate">数据库操作</string>
+    <string name="database_clear">清空</string>
 </resources>

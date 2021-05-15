@@ -6,7 +6,7 @@ import java.util.*
 @Dao
 interface GeneratorDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun add(vararg generators: Generator)
 
     @Update
@@ -14,6 +14,12 @@ interface GeneratorDao {
 
     @Delete
     fun delete(generator: Generator)
+
+    @Query("DELETE FROM generator")
+    fun deleteAll()
+
+    @Query("DELETE FROM generator WHERE uuid = :uuid")
+    fun deleteByUuid(uuid: String)
 
     @Query("SELECT * FROM generator WHERE uuid = :uuid")
     fun getGenerator(uuid: String): Generator?

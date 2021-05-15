@@ -15,6 +15,7 @@ import cn.wandersnail.bluetooth.Connection
 import cn.wandersnail.bluetooth.DiscoveryListener
 import com.github.mikephil.charting.data.Entry
 import edu.scut.generator.MainActivity
+import edu.scut.generator.database.Generator
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
 import java.util.*

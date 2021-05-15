@@ -18,6 +18,18 @@
         android:title="@string/manual_discover" />
 
     <item
+        android:id="@+id/databaseOperate"
+        android:title="@string/database_operate">
+
+        <menu>
+            <item
+                android:id="@+id/databaseClear"
+                android:title="@string/database_clear" />
+        </menu>
+
+    </item>
+
+    <item
         android:id="@+id/about"
         android:title="@string/about" />
 

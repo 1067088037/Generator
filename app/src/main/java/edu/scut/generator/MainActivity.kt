@@ -15,10 +15,10 @@ import androidx.lifecycle.ViewModelProvider
 import cn.wandersnail.bluetooth.*
 import cn.wandersnail.commons.observer.Observe
 import com.github.mikephil.charting.data.Entry
-import edu.scut.generator.database.DatabaseManager
 import edu.scut.generator.database.Generator
 import edu.scut.generator.database.GeneratorDataBase
 import edu.scut.generator.global.Constant
+import edu.scut.generator.global.GeneratorState
 import edu.scut.generator.global.debug
 import edu.scut.generator.global.prepareCommand
 import edu.scut.generator.ui.main.GeneratorItem
@@ -27,6 +27,7 @@ import edu.scut.generator.ui.main.MainViewModel
 import kotlinx.coroutines.*
 import java.nio.charset.Charset
 import java.util.*
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity(), EventObserver {
 
@@ -34,12 +35,13 @@ class MainActivity : AppCompatActivity(), EventObserver {
     private var btManager: BTManager = BTManager.getInstance()
     private val tag = "MainActivity"
     private val generatorDataBase: GeneratorDataBase
-        get() = DatabaseManager.generatorDataBase
+        get() = GeneratorDataBase.getInstance()
 
     private val readBytes: Queue<Byte> = LinkedList()
 
     private lateinit var refreshGenerators: Job
     private lateinit var refreshLineChat: Job
+    private var simulationData: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,20 +55,34 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 .replace(R.id.container, MainFragment.newInstance())
                 .commitNow()
         }
-        DatabaseManager.init(applicationContext)
+        GeneratorDataBase.init(context = applicationContext)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            viewModel.generatorItemList.postValue(
+                generatorDataBase.getAllGenerator().map {
+                    GeneratorItem(
+                        id = UUID.fromString(it.uuid),
+                        name = it.name,
+                        state = GeneratorState.Disconnected
+                    )
+                }.toMutableList()
+            )
+        }
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        refreshGenerators = CoroutineScope(Dispatchers.Main).launch {
+        refreshGenerators = CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
                 delay(10L)
                 if (SystemClock.elapsedRealtime() - viewModel.lastReadBluetoothTime.value!! >= 250L) {
 //                    debug("数据超时")
                 } else {
-                    val list = viewModel.generatorItemList.value!!
-                    viewModel.generatorItemList.value = list
-                    val thisGeneratorItem =
-                        list.find { it.id == viewModel.thisGeneratorItem.value?.id }
-                    viewModel.thisGeneratorItem.value = thisGeneratorItem
+                    withContext(Dispatchers.Main) {
+                        val list = viewModel.generatorItemList.value!!
+                        viewModel.generatorItemList.value = list
+                        val thisGeneratorItem =
+                            list.find { it.id == viewModel.thisGeneratorItem.value?.id }
+                        viewModel.thisGeneratorItem.value = thisGeneratorItem
+                    }
                 }
             }
         }
@@ -115,8 +131,14 @@ class MainActivity : AppCompatActivity(), EventObserver {
         super.onDestroy()
         refreshGenerators.cancel()
         refreshLineChat.cancel()
+        simulationData?.cancel()
         btManager.destroy()
-//        exitProcess(0)
+        generatorDataBase.close()
+
+        GlobalScope.launch {
+            debug(500)
+            exitProcess(0)
+        }
     }
 
     @Observe
@@ -150,8 +172,23 @@ class MainActivity : AppCompatActivity(), EventObserver {
             CoroutineScope(Dispatchers.Default).launch {
                 //解码成发电机信息
                 val generators = GeneratorItem.decodeGeneratorArray(input) //解码成发电机信息
+                generators.forEach {
+                    withContext(Dispatchers.IO) {
+                        val queryResult = generatorDataBase.getGenerator(it.id.toString())
+                        if (queryResult == null) {
+                            generatorDataBase.addGenerator(
+                                Generator(
+                                    uuid = it.id.toString(),
+                                    name = it.name,
+                                    createTime = System.currentTimeMillis()
+                                )
+                            )
+                        }
+                    }
+                }
+                val tempList = generators.toMutableList()
                 withContext(Dispatchers.Main) {
-                    viewModel.generatorItemList.value = generators.toMutableList()
+                    viewModel.generatorItemList.value = tempList
                     viewModel.lastReadBluetoothTime.value = SystemClock.elapsedRealtime()
                 }
                 log("收到发电机信息 = ${generators.contentDeepToString()}")
@@ -266,28 +303,33 @@ class MainActivity : AppCompatActivity(), EventObserver {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.tempTest -> {
-//                generatorDataBase.deleteGenerator(Generator(_id = 6))
-//                generatorDataBase.addGenerator(Generator(uuid = "123456"))
+//                generatorDataBase.deleteGeneratorByUuid("123456")
+                generatorDataBase.addGenerator(Generator(uuid = "123456"))
+//                generatorDataBase.deleteAll()
+            }
+            R.id.databaseClear -> CoroutineScope(Dispatchers.IO).launch {
+                generatorDataBase.clearAllTables()
             }
             R.id.debugMode -> {
                 viewModel.commandTextVisibility.value = View.VISIBLE
             }
             R.id.simulationData -> {
-                CoroutineScope(Dispatchers.IO).launch {
-                    while (isActive) {
-                        val random = Math.random() - 0.5
-                        val generatorItem =
-                            GeneratorItem(
-                                id = Constant.TempUUid,
-                                power = 20.0 + 6 * random,
-                                temperatureDifference = 5.0 + 3 * random,
-                                rev = 450.0 + 300 * random
-                            )
-                        val message = GeneratorItem.encodeGeneratorArray(arrayOf(generatorItem))
-                        processDataFromBLT(message.toByteArray(Charset.defaultCharset()))
-                        delay(100L)
+                if (simulationData == null)
+                    simulationData = CoroutineScope(Dispatchers.IO).launch {
+                        while (isActive) {
+                            val random = Math.random() - 0.5
+                            val generatorItem =
+                                GeneratorItem(
+                                    id = Constant.DefaultUUID,
+                                    power = 20.0 + 6 * random,
+                                    temperatureDifference = 5.0 + 3 * random,
+                                    rev = 450.0 + 300 * random
+                                )
+                            val message = GeneratorItem.encodeGeneratorArray(arrayOf(generatorItem))
+                            processDataFromBLT(message.toByteArray(Charset.defaultCharset()))
+                            delay(100L)
+                        }
                     }
-                }
             }
             R.id.manualDiscover -> startDiscovery()
             R.id.about -> {

@@ -16,6 +16,7 @@ object Constant {
     const val MaxDebugCommandLine = 10
 
     const val DefaultDevice = "HC-05"
+    val DefaultUUID = UUID.fromString("522633bf-3a24-46dc-b804-1721828d1959")
 
     //需要申请的权限
     val NeedPermissions = arrayOf(
@@ -24,7 +25,6 @@ object Constant {
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
     )
-    val TempUUid: UUID = UUID.randomUUID()
     val DefaultGeneratorList = arrayListOf(
         GeneratorItem(
             name = "1号发电机",
