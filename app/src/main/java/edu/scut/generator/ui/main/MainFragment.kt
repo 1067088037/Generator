@@ -58,9 +58,10 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         recyclerView = dataBinding.mainRecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
         viewModel.generatorItemList.observe(this, Observer {
-            if (SystemClock.elapsedRealtime() - lastNotifyDataTime >= 500L) {
+            if (SystemClock.elapsedRealtime() - lastNotifyDataTime >= 500L || viewModel.mustNotifyDataSetChanged.value!!) {
                 recyclerView.adapter!!.notifyDataSetChanged()
                 lastNotifyDataTime = SystemClock.elapsedRealtime()
+                viewModel.mustNotifyDataSetChanged.value = false
             }
         })
         recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList, this)

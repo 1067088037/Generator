@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
         GeneratorDataBase.init(context = applicationContext)
 
         CoroutineScope(Dispatchers.IO).launch {
+            viewModel.mustNotifyDataSetChanged.postValue(true)
             viewModel.generatorItemList.postValue(
                 generatorDataBase.getAllGenerator().map {
                     GeneratorItem(
@@ -74,7 +75,14 @@ class MainActivity : AppCompatActivity(), EventObserver {
             while (isActive) {
                 delay(10L)
                 if (SystemClock.elapsedRealtime() - viewModel.lastReadBluetoothTime.value!! >= 250L) {
-//                    debug("数据超时")
+                    val list = viewModel.generatorItemList.value!!
+                    list.forEach {
+                        it.power = 0.0
+                        it.rev = 0.0
+                        it.temperatureDifference = 0.0
+                        it.state = GeneratorState.Disconnected
+                    }
+                    viewModel.generatorItemList.postValue(list)
                 } else {
                     withContext(Dispatchers.Main) {
                         val list = viewModel.generatorItemList.value!!
@@ -314,7 +322,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 viewModel.commandTextVisibility.value = View.VISIBLE
             }
             R.id.simulationData -> {
-                if (simulationData == null)
+                if (simulationData == null) {
                     simulationData = CoroutineScope(Dispatchers.IO).launch {
                         while (isActive) {
                             val random = Math.random() - 0.5
@@ -330,6 +338,10 @@ class MainActivity : AppCompatActivity(), EventObserver {
                             delay(100L)
                         }
                     }
+                } else {
+                    simulationData!!.cancel()
+                    simulationData = null
+                }
             }
             R.id.manualDiscover -> startDiscovery()
             R.id.about -> {
