@@ -4,11 +4,8 @@ import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.os.SystemClock
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -59,9 +56,8 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
         recyclerView.layoutManager = LinearLayoutManager(context)
         viewModel.generatorItemList.observe(this, Observer {
             if (SystemClock.elapsedRealtime() - lastNotifyDataTime >= 500L || viewModel.mustNotifyDataSetChanged.value!!) {
-                recyclerView.adapter!!.notifyDataSetChanged()
-                lastNotifyDataTime = SystemClock.elapsedRealtime()
-                viewModel.mustNotifyDataSetChanged.value = false
+//                debug(viewModel.generatorItemList.value!!.toTypedArray().contentDeepToString())
+                refreshGeneratorList()
             }
         })
         recyclerView.adapter = GeneratorRecyclerAdapter(viewModel.generatorItemList, this)
@@ -71,6 +67,12 @@ class MainFragment : Fragment(), GeneratorRecyclerAdapter.IGeneratorRecyclerAdap
 //        viewModel.generatorItemList.value = Constant.defaultGeneratorList.toMutableList()
 
         return dataBinding.root
+    }
+
+    private fun refreshGeneratorList() {
+        recyclerView.adapter?.notifyDataSetChanged()
+        lastNotifyDataTime = SystemClock.elapsedRealtime()
+        viewModel.mustNotifyDataSetChanged.postValue(false)
     }
 
     override fun onItemClick(item: GeneratorItem) {

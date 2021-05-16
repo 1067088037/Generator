@@ -20,6 +20,9 @@ import edu.scut.generator.databinding.FragmentDetailBinding
 import edu.scut.generator.global.Constant
 import edu.scut.generator.global.debug
 import edu.scut.generator.global.prepareCommand
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class DetailFragment : Fragment() {
 
@@ -44,15 +47,25 @@ class DetailFragment : Fragment() {
         if (this::mItem.isInitialized) viewModel.thisGeneratorItem.value = mItem
         setHasOptionsMenu(true)
         (activity!! as AppCompatActivity).supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        (activity!! as AppCompatActivity).supportActionBar!!.title = "${viewModel.thisGeneratorItem.value?.name}详情"
 
         viewModel.thisGeneratorItem.observe(this, Observer { generatorItem ->
-            if (generatorItem != null) dataBinding.generatorIcon.setImageResource(generatorItem.iconId)
+            if (generatorItem != null) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    dataBinding.generatorIcon.setImageResource(generatorItem.iconId)
+                    (activity!! as AppCompatActivity).supportActionBar!!.title =
+                        "${generatorItem.name}详情"
+                }
+            }
         })
         initLineChart()
         viewModel.entryDetailTime.value = SystemClock.elapsedRealtime()
 
         return dataBinding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.thisGeneratorItem.value = null
     }
 
     private fun initLineChart() {

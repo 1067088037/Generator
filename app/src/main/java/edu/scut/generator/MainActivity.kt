@@ -9,8 +9,12 @@ import android.os.SystemClock
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
+import androidx.core.view.marginBottom
 import androidx.lifecycle.ViewModelProvider
 import cn.wandersnail.bluetooth.*
 import cn.wandersnail.commons.observer.Observe
@@ -27,6 +31,7 @@ import edu.scut.generator.ui.main.MainViewModel
 import kotlinx.coroutines.*
 import java.nio.charset.Charset
 import java.util.*
+import kotlin.math.pow
 import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity(), EventObserver {
@@ -52,23 +57,12 @@ class MainActivity : AppCompatActivity(), EventObserver {
         ).get(MainViewModel::class.java)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.container, MainFragment.newInstance())
+                .replace(R.id.container, MainFragment.newInstance(), "MainFragment")
                 .commitNow()
         }
         GeneratorDataBase.init(context = applicationContext)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            viewModel.mustNotifyDataSetChanged.postValue(true)
-            viewModel.generatorItemList.postValue(
-                generatorDataBase.getAllGenerator().map {
-                    GeneratorItem(
-                        id = UUID.fromString(it.uuid),
-                        name = it.name,
-                        state = GeneratorState.Disconnected
-                    )
-                }.toMutableList()
-            )
-        }
+        updateGenerators()
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         refreshGenerators = CoroutineScope(Dispatchers.IO).launch {
@@ -84,13 +78,14 @@ class MainActivity : AppCompatActivity(), EventObserver {
                     }
                     viewModel.generatorItemList.postValue(list)
                 } else {
-                    withContext(Dispatchers.Main) {
-                        val list = viewModel.generatorItemList.value!!
-                        viewModel.generatorItemList.value = list
-                        val thisGeneratorItem =
-                            list.find { it.id == viewModel.thisGeneratorItem.value?.id }
-                        viewModel.thisGeneratorItem.value = thisGeneratorItem
-                    }
+                    if (SystemClock.elapsedRealtime() - viewModel.editGeneratorTime.value!! >= 500)
+                        withContext(Dispatchers.Main) {
+                            val list = viewModel.generatorItemList.value!!
+                            viewModel.generatorItemList.value = list
+                            val thisGeneratorItem =
+                                list.find { it.id == viewModel.thisGeneratorItem.value?.id }
+                            viewModel.thisGeneratorItem.value = thisGeneratorItem
+                        }
                 }
             }
         }
@@ -191,6 +186,8 @@ class MainActivity : AppCompatActivity(), EventObserver {
                                     createTime = System.currentTimeMillis()
                                 )
                             )
+                        } else {
+                            it.name = queryResult.name
                         }
                     }
                 }
@@ -291,6 +288,22 @@ class MainActivity : AppCompatActivity(), EventObserver {
         }
     }
 
+    private fun updateGenerators() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val list = generatorDataBase.getAllGenerator().map {
+                GeneratorItem(
+                    id = UUID.fromString(it.uuid),
+                    name = it.name,
+                    state = GeneratorState.Disconnected
+                )
+            }.toMutableList()
+            viewModel.mustNotifyDataSetChanged.postValue(true)
+            viewModel.generatorItemList.postValue(list)
+            val thisGenerator = viewModel.thisGeneratorItem
+            thisGenerator.postValue(viewModel.generatorItemList.value!!.find { it.id == thisGenerator.value!!.id })
+        }
+    }
+
     private fun startDiscovery() {
         if (btManager.bluetoothAdapter!!.isEnabled.not()) {
             startActivityForResult(
@@ -303,7 +316,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
         return true
     }
@@ -312,14 +325,56 @@ class MainActivity : AppCompatActivity(), EventObserver {
         when (item.itemId) {
             R.id.tempTest -> {
 //                generatorDataBase.deleteGeneratorByUuid("123456")
-                generatorDataBase.addGenerator(Generator(uuid = "123456"))
+//                generatorDataBase.addGenerator(Generator(uuid = "123456"))
 //                generatorDataBase.deleteAll()
             }
-            R.id.databaseClear -> CoroutineScope(Dispatchers.IO).launch {
-                generatorDataBase.clearAllTables()
+            R.id.rename -> {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val from =
+                        generatorDataBase.getGenerator(viewModel.thisGeneratorItem.value?.id.toString())
+                    if (from != null) {
+                        withContext(Dispatchers.Main) {
+                            val editText = EditText(this@MainActivity).apply { setText(from.name) }
+                            editText.hint = "请输入新的发电机名称"
+                            AlertDialog.Builder(this@MainActivity)
+                                .setTitle("重命名")
+                                .setView(editText)
+                                .setPositiveButton("确定") { _, _ ->
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        generatorDataBase.updateGenerator(from.apply {
+                                            name = editText.text.toString()
+                                        })
+                                        viewModel.generatorItemList.value!!.find { it.id.toString() == from.uuid }?.name =
+                                            from.name
+                                        viewModel.thisGeneratorItem.postValue(
+                                            viewModel.thisGeneratorItem.value!!.apply {
+                                                name = from.name
+                                            })
+                                    }
+                                }
+                                .setNegativeButton("取消", null)
+                                .show()
+                        }
+                    }
+                }
+            }
+            R.id.delete -> {
+                if (viewModel.thisGeneratorItem.value != null) {
+                    val uuid = viewModel.thisGeneratorItem.value!!.id.toString()
+                    onBackPressed()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        generatorDataBase.deleteGeneratorByUuid(uuid)
+                        viewModel.generatorItemList.value!!.remove(viewModel.generatorItemList.value!!.find { it.id.toString() == uuid })
+                    }
+                }
             }
             R.id.debugMode -> {
-                viewModel.commandTextVisibility.value = View.VISIBLE
+                viewModel.commandTextVisibility.value =
+                    when (viewModel.commandTextVisibility.value) {
+                        View.VISIBLE -> View.INVISIBLE
+                        View.INVISIBLE -> View.VISIBLE
+                        else -> View.INVISIBLE
+                    }
             }
             R.id.simulationData -> {
                 if (simulationData == null) {
@@ -329,9 +384,9 @@ class MainActivity : AppCompatActivity(), EventObserver {
                             val generatorItem =
                                 GeneratorItem(
                                     id = Constant.DefaultUUID,
-                                    power = 20.0 + 6 * random,
+                                    power = 20.0 + 8 * random,
                                     temperatureDifference = 5.0 + 3 * random,
-                                    rev = 450.0 + 300 * random
+                                    rev = 450.0 + 350 * random
                                 )
                             val message = GeneratorItem.encodeGeneratorArray(arrayOf(generatorItem))
                             processDataFromBLT(message.toByteArray(Charset.defaultCharset()))
@@ -344,6 +399,7 @@ class MainActivity : AppCompatActivity(), EventObserver {
                 }
             }
             R.id.manualDiscover -> startDiscovery()
+            R.id.stopDiscover -> btManager.stopDiscovery()
             R.id.about -> {
                 AlertDialog.Builder(this)
                     .setTitle("关于")

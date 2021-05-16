@@ -1,32 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:id="@+id/tempTest"
-        android:title="@string/temp_test" />
-
-    <item
-        android:id="@+id/debugMode"
-        android:title="@string/debug_mode" />
-
-    <item
-        android:id="@+id/simulationData"
-        android:title="@string/simulation_data" />
-
-    <item
-        android:id="@+id/manualDiscover"
-        android:title="@string/manual_discover" />
-
-    <item
-        android:id="@+id/databaseOperate"
-        android:title="@string/database_operate">
+    <item android:title="@string/bluetooth_operate">
 
         <menu>
             <item
-                android:id="@+id/databaseClear"
-                android:title="@string/database_clear" />
+                android:id="@+id/manualDiscover"
+                android:title="@string/manual_discover" />
+
+            <item
+                android:id="@+id/stopDiscover"
+                android:title="@string/stop_discover" />
+        </menu>
+    </item>
+
+
+    <item android:title="@string/generator_operate">
+
+        <menu>
+            <item
+                android:id="@+id/rename"
+                android:title="@string/rename" />
+            <item
+                android:id="@+id/delete"
+                android:title="@string/delete" />
         </menu>
 
+    </item>
+
+    <item android:title="@string/debug">
+        <menu>
+            <item
+                android:id="@+id/tempTest"
+                android:title="@string/temp_test" />
+
+            <item
+                android:id="@+id/debugMode"
+                android:title="@string/debug_mode" />
+
+            <item
+                android:id="@+id/simulationData"
+                android:title="@string/simulation_data" />
+        </menu>
     </item>
 
     <item

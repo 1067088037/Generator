@@ -9,7 +9,7 @@ import java.util.*
 data class GeneratorItem(
     var id: UUID = UUID.randomUUID(),
     var iconId: Int = R.drawable.ic_generator,
-    var name: String = "Generator",
+    var name: String = "发电机",
     var state: GeneratorState = GeneratorState.Unknown,
     var power: Double = 0.0,
     var temperatureDifference: Double = 0.0,

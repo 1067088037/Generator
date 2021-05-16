@@ -18,6 +18,11 @@
     <string name="simulation_data">模拟数据</string>
     <string name="debug_mode">调试模式</string>
     <string name="about">关于</string>
-    <string name="database_operate">数据库操作</string>
+    <string name="generator_operate">发电机操作</string>
     <string name="database_clear">清空</string>
+    <string name="rename">重命名</string>
+    <string name="delete">删除</string>
+    <string name="debug">调试</string>
+    <string name="stop_discover">停止搜索</string>
+    <string name="bluetooth_operate">蓝牙操作</string>
 </resources>
